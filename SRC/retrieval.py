@@ -6,13 +6,15 @@ from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core import documents
+from langchain_core.documents import Document 
+from langchain_chroma import Chroma
 
 load_dotenv()
 
 DATA_DIR = "../DATA"
 DB_DIR = "chroma_store"
 
+# ACT as load_data() from document_loaders
 def load_transcripts():
     docs = []
     for path in glob.glob(f"{DATA_DIR}/*.vtt"):
@@ -23,10 +25,25 @@ def load_transcripts():
                 continue
             lines.append(line)
         text = " ".join(lines)
-        docs.append(text)
+        session = re.search(r"Session[ _]*(\d+)", path).group(1)
+        docs.append(Document(page_content=text, metadata={"session": session}))
+
     return docs
+
+def load_store():
+    embeddings = HuggingFaceEmbeddings()
+
+    if os.path.exists(DB_DIR):
+        return Chroma(persist_directory=DB_DIR,embedding_function=embeddings)
+
+    docs = load_transcripts()
+    chunks = RecursiveCharacterTextSplitter(chunk_size = 1000 , chunk_overlap = 150).split_documents(docs)
+
+    return Chroma.from_documents(chunks,embeddings,persist_directory=DB_DIR)
+
 
 if __name__ == "__main__":
     
     docs = load_transcripts()
+    print(docs)
     
