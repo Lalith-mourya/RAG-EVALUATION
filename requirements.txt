@@ -4,6 +4,7 @@ langchain-groq
 chromaDB
 langchain-text-splitters
 sentence-transformers
+langchain-huggingface
 deepeval
 pytest
 python-dotenv
