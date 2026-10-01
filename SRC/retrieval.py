@@ -30,6 +30,7 @@ def load_transcripts():
 
     return docs
 
+
 def load_store():
     embeddings = HuggingFaceEmbeddings()
 
@@ -37,13 +38,18 @@ def load_store():
         return Chroma(persist_directory=DB_DIR,embedding_function=embeddings)
 
     docs = load_transcripts()
-    chunks = RecursiveCharacterTextSplitter(chunk_size = 1000 , chunk_overlap = 150).split_documents(docs)
+    textsplitter = RecursiveCharacterTextSplitter(chunk_size = 1000 , chunk_overlap = 150)
+    chunks = textsplitter.split_documents(docs)
 
     return Chroma.from_documents(chunks,embeddings,persist_directory=DB_DIR)
 
+def build_retriever():
+    return load_store().as_retriever(kwargs=5)
 
 if __name__ == "__main__":
     
-    docs = load_transcripts()
-    print(docs)
+    retriever = build_retriever()
+    results = retriever.invoke("What is meant by regression testing?")
+    for i in results:
+        print(f"[Session {i.metadata['session']}] {i.page_content[:150]}...\n")
     
