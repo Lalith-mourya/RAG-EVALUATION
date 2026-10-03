@@ -11,7 +11,7 @@ from langchain_chroma import Chroma
 
 load_dotenv()
 
-DATA_DIR = "../DATA"
+DATA_DIR = "DATA"
 DB_DIR = "chroma_store"
 
 # ACT as load_data() from document_loaders
@@ -34,17 +34,23 @@ def load_transcripts():
 def load_store():
     embeddings = HuggingFaceEmbeddings()
 
-    if os.path.exists(DB_DIR):
-        return Chroma(persist_directory=DB_DIR,embedding_function=embeddings)
-
     docs = load_transcripts()
-    textsplitter = RecursiveCharacterTextSplitter(chunk_size = 1000 , chunk_overlap = 150)
-    chunks = textsplitter.split_documents(docs)
 
-    return Chroma.from_documents(chunks,embeddings,persist_directory=DB_DIR)
+    chunks = RecursiveCharacterTextSplitter(
+        chunk_size=1000,
+        chunk_overlap=150
+    ).split_documents(docs)
+
+    return Chroma.from_documents(
+        chunks,
+        embeddings,
+        persist_directory=DB_DIR
+    )
 
 def build_retriever():
-    return load_store().as_retriever(kwargs=5)
+    return load_store().as_retriever(
+    search_kwargs={"k": 5}
+)
 
 if __name__ == "__main__":
     
