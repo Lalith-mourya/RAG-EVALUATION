@@ -41,6 +41,7 @@ def load_store():
         chunk_overlap=150
     ).split_documents(docs)
 
+
     return Chroma.from_documents(
         chunks,
         embeddings,
